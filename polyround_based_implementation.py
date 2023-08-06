@@ -22,6 +22,9 @@ except ImportError as e:
 
 from volestipy import HPolytope
 
+from PolyRound.api import PolyRoundApi
+from PolyRound.static_classes.lp_utils import ChebyshevFinder
+from PolyRound.settings import PolyRoundSettings
 
 class PolytopeSampler:
     def __init__(self, metabol_net):
@@ -56,7 +59,7 @@ class PolytopeSampler:
 
     def get_polytope(self):
         """A member function to derive the corresponding full dimensional polytope
-        and a isometric linear transformation that maps the latter to the initial space.
+        and an isometric linear transformation that maps the latter to the initial space.
         """
 
         if (
@@ -140,16 +143,88 @@ class PolytopeSampler:
         """
         Simplify the polytope using PolyRound's simplify_polytope method.
         """
-        pass
+        # Convert the metabolic network to a Polytope object.
+        polytope = PolyRoundApi.cobra_model_to_polytope(self._metabolic_network)
+
+        # Make a settings object for PolyRound - optional.
+        settings = PolyRoundSettings()
+
+        # Simplify the polytope using PolyRound.
+        simplified_polytope = PolyRoundApi.simplify_polytope(polytope, settings)
+
+        return simplified_polytope
 
     def polyround_transform_polytope(self, polytope):
         """
         Transform the given polytope using PolyRound's transform_polytope method.
         """
-        pass
+        # Convert the polytope to a Polytope object if needed.
+        if not isinstance(polytope, Polytope):
+            polytope = PolyRoundApi.cobra_model_to_polytope(polytope)
+
+        # Transform the polytope using PolyRound.
+        transformed_polytope = PolyRoundApi.transform_polytope(polytope)
+
+        return transformed_polytope
 
     def polyround_round_polytope(self, polytope):
         """
         Round the given polytope using PolyRound's round_polytope method.
         """
-        pass
+        # Convert the polytope to a Polytope object if needed.
+        if not isinstance(polytope, Polytope):
+            polytope = PolyRoundApi.cobra_model_to_polytope(polytope)
+
+        # Round the polytope using PolyRound.
+        rounded_polytope = PolyRoundApi.round_polytope(polytope)
+
+        return rounded_polytope
+
+if __name__ == '__main__':
+    # Load the metabolic model
+    model = MetabolicNetwork.from_json('/home/nitishmalang/Downloads/iAB_RBC_283.json')
+
+    # Create a PolytopeSampler instance
+    sampler = PolytopeSampler(model)
+
+    # Measure the time taken by get_polytope
+    start_time = time.time()
+    polytope_dingo = sampler.get_polytope()
+    end_time = time.time()
+
+    time_taken_dingo = end_time - start_time
+    print(f"Time taken by dingo's get_polytope: {time_taken_dingo} seconds")
+
+    # Create a PolyRoundImplementation instance
+    polyround_implementation = PolyRoundImplementation(model)
+
+    # Measure the time taken by polyround_simplify_polytope
+    start_time = time.time()
+    polytope_simplified = polyround_implementation.polyround_simplify_polytope()
+    end_time = time.time()
+
+    time_taken_simplify = end_time - start_time
+    print(f"Time taken by PolyRound's simplify_polytope: {time_taken_simplify} seconds")
+
+    # Measure the time taken by polyround_transform_polytope
+    start_time = time.time()
+    polytope_transformed = polyround_implementation.polyround_transform_polytope(polytope_simplified)
+    end_time = time.time()
+
+    time_taken_transform = end_time - start_time
+    print(f"Time taken by PolyRound's transform_polytope: {time_taken_transform} seconds")
+
+    # Measure the time taken by polyround_round_polytope
+    start_time = time.time()
+    polytope_rounded = polyround_implementation.polyround_round_polytope(polytope_transformed)
+    end_time = time.time()
+
+    time_taken_round = end_time - start_time
+    print(f"Time taken by PolyRound's round_polytope: {time_taken_round} seconds")
+
+
+
+
+
+
+
