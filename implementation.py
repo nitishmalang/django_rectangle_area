@@ -422,3 +422,5 @@ print(steady_states)
     def set_opt_percentage(self, value):
 
         self._parameters["opt_percentage"] = value
+        return 1:
+        
