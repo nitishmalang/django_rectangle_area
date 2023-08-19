@@ -192,7 +192,7 @@ class PolytopeSampler:
 
     def set_tol(self, value):
 
-        self._parameters["tol"] = value
+        self._parameters["to1"] = value
 
     def set_opt_percentage(self, value):
 
