@@ -112,25 +112,15 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
                             i,
                         ]
 
-                        redundant_facet_right = True
-                        redundant_facet_left = True
+                     #   redundant_facet_right = True
+                      #  redundant_facet_left = True
 
                         # for the maximum
                         objective_function_max = np.asarray(
                             [-x for x in objective_function]
                         )
-                        model_iter = update_model(
-                            model_iter,
-                            n,
-                            Aeq_sparse,
-                            beq,
-                            lb,
-                            ub,
-                            A_sparse,
-                            [val],
-                            objective_function_max,
-                        )
-                        model_iter.optimize()
+                       model_iter.setObjective(gp.LinExpr(objective_function_max, x), GRB.MAXIMIZE)
+                       model_iter.optimize()
 
                         # Again if optimized
                         status = model_iter.status
@@ -144,17 +134,7 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
                         if not facet_right_removed[0, i]:
                             ub_iter = ub.copy()
                             ub_iter[i] = ub_iter[i] + 1
-                            model_iter = update_model(
-                                model_iter,
-                                n,
-                                Aeq_sparse,
-                                beq,
-                                lb,
-                                ub_iter,
-                                A_sparse,
-                                [val],
-                                objective_function_max,
-                            )
+                            model_iter.setObjective(gp.LinExpr(objective_function_max, x), GRB.MAXIMIZE)
                             model_iter.optimize()
 
                             status = model_iter.status
@@ -170,17 +150,7 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
                                     removed += 1
                                     facet_right_removed[0, i] = True
 
-                        model_iter = update_model(
-                            model_iter,
-                            n,
-                            Aeq_sparse,
-                            beq,
-                            lb,
-                            ub,
-                            A_sparse,
-                            [val],
-                            objective_function,
-                        )
+                        model_iter.setObjective(gp.LinExpr(objective_function, x), GRB.MAXIMIZE)
                         model_iter.optimize()
 
                         # If optimized
@@ -195,17 +165,7 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
                         if not facet_left_removed[0, i]:
                             lb_iter = lb.copy()
                             lb_iter[i] = lb_iter[i] - 1
-                            model_iter = update_model(
-                                model_iter,
-                                n,
-                                Aeq_sparse,
-                                beq,
-                                lb_iter,
-                                ub,
-                                A_sparse,
-                                [val],
-                                objective_function,
-                            )
+                            model_iter.setObjective(gp.LinExpr(objective_function, x), GRB.MAXIMIZE)
                             model_iter.optimize()
 
                             status = model_iter.status
