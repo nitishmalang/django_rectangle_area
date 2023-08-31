@@ -1,8 +1,3 @@
-import numpy as np
-import sys
-import gurobipy as gp
-from gurobipy import GRB
-from scipy import sparse as sp
 
 def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
     if lb.size != S.shape[1] or ub.size != S.shape[1]:
