@@ -11,23 +11,23 @@ ef update_model(model, n, Aeq_sparse, beq, lb, ub, A_sparse, b, objective_functi
     b -- a vector matrix s.t. A_sparse x <= b
     objective_function -- the objective function, i.e., a n-dimensional vector
     """
-    model.remove(model.getVars())
-    model.update()
-    model.remove(model.getConstrs())
-    model.update()
-    x = model.addMVar(
-        shape=n,
-        vtype=GRB.CONTINUOUS,
-        name="x",
-        lb=lb,
-        ub=ub,
-    )
-    model.update()
+
+    # Get the variables
+    x = model.getVars()
+    # Update the bounds of the variables
+    for i in range(n):
+        x[i].lb = lb[i]
+        x[i].ub = ub[i]
+
+   
+    # Update the constraints
+    model.removeConstr(model.getConstrs())
     model.addMConstr(Aeq_sparse, x, "=", beq, name="c")
-    model.update()
     model.addMConstr(A_sparse, x, "<", b, name="d")
-    model.update()
+
+   # Update the objective function
     model.setMObjective(None, objective_function, 0.0, None, None, x, GRB.MINIMIZE)
+
     model.update()
 
     return model
