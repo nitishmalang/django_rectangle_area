@@ -1,0 +1,61 @@
+teration	LP	Purpose
+1	Initial LP	Finds the optimal solution to the FBA problem and uses it to find a threshold value
+2-*	LP to relax the inequality constraint	Checks whether the facet is redundant in the left direction
+2-*	LP to tighten the inequality constraint	Checks whether the facet is redundant in the right direction
+*	LP to remove redundant facets	Removes the redundant facets and updates the threshold value
+The asterisk (*) indicates that the LPs are solved for each facet.
+
+ure. Here is an explanation of the linear programs that are solved by the function fast_remove_redundant_facets:
+
+Initial LP: This LP is formulated as follows:
+maximize c'x
+subject to
+Sx = 0
+lb <= x <= ub
+where:
+
+c is the objective function
+S is the stoichiometric matrix
+lb and ub are the lower and upper bounds on the fluxes
+The first constraint ensures that the solution is a feasible point of the FBA problem. The second and third constraints ensure that the solution is within the bounds.
+
+The optimal solution to this LP gives the maximum biomass that can be produced by the FBA problem. This value is used to find a threshold value for the redundant facets.
+
+LP to relax the inequality constraint: This LP is formulated as follows:
+maximize c'x
+subject to
+Sx = 0
+lb <= x <= ub
+a'x <= val + eps
+where:
+
+a is the vector that defines the facet
+eps is a small positive number
+The first three constraints are the same as the constraints in the initial LP. The last constraint is the inequality constraint of the facet, but with the threshold value relaxed by eps.
+
+If the optimal solution to this LP is feasible, then the facet is redundant. Otherwise, the facet is not redundant.
+
+LP to tighten the inequality constraint: This LP is formulated as follows:
+maximize c'x
+subject to
+Sx = 0
+lb <= x <= ub
+a'x <= val - eps
+This LP is similar to the previous LP, but the threshold value is tightened by eps.
+
+If the optimal solution to this LP is not feasible, then the facet is not redundant. Otherwise, the facet is redundant.
+
+LP to remove redundant facets: This LP is formulated as follows:
+maximize c'x
+subject to
+Sx = 0
+lb <= x <= ub
+a'x <= val
+where:
+
+a is the vector that defines the facet
+val is the threshold value
+The first three constraints are the same as the constraints in the initial LP. The last constraint is the inequality constraint of the facet.
+
+This LP removes the redundant facets and updates the threshold value.
+
