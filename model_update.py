@@ -1,4 +1,4 @@
-ef update_model(model, n, Aeq_sparse, beq, lb, ub, A_sparse, b, objective_function):
+def update_model(model, n, Aeq_sparse, beq, lb, ub, A_sparse, b, objective_function):
     """A function to update a gurobi model that solves a linear program
     Keyword arguments:
     model -- gurobi model
