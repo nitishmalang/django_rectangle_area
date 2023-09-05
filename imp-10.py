@@ -1,8 +1,4 @@
-import sys
-import numpy as np
-import scipy.sparse as sp
-import gurobipy as gp
-from gurobipy import GRB
+
 
 def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
     """A function to find and remove the redundant facets and to find
