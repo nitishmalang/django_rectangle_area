@@ -3,9 +3,9 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
     the facets with very small offset and to set them as equalities
 
     Keyword arguments:
-    lb -- lower bounds for the fluxes, i.e., an n-dimensional vector
-    ub -- upper bounds for the fluxes, i.e., an n-dimensional vector
-    S -- the m x n stoichiometric matrix, s.t. Sv = 0
+    lb -- lower bounds for the fluxes, i.e., a n-dimensional vector
+    ub -- upper bounds for the fluxes, i.e., a n-dimensional vector
+    S -- the mxn stoichiometric matrix, s.t. Sv = 0
     c -- the objective function to maximize
     opt_percentage -- consider solutions that give you at least a certain
                       percentage of the optimal solution (default is to consider
@@ -17,7 +17,7 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
             "The number of reactions must be equal to the number of given flux bounds."
         )
 
-    # declare the tolerance that Gurobi works properly (we found it experimentally)
+    # declare the tolerance that gurobi works properly (we found it experimentally)
     redundant_facet_tol = 1e-07
     tol = 1e-06
 
@@ -43,6 +43,7 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
     beq_res = np.array(beq)
 
     try:
+
         # To avoid printing the output of the optimize() function of Gurobi, we need to set an environment like this
         with gp.Env(empty=True) as env:
             env.setParam("OutputFlag", 0)
@@ -73,14 +74,18 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
                 # Add constraints
                 model.addMConstr(Aeq_sparse, x, "=", beq, name="c")
 
+                # Update the model to include the constraints added
+                model.update()
+
                 # Add constraints for the inequalities of A
                 model.addMConstr(A_sparse, x, "<", [val], name="d")
 
+                # Update the model with the extra constraints and then print it
                 model.update()
 
                 model_iter = model.copy()
 
-                # initialize
+                # Initialize
                 indices_iter = range(n)
                 removed = 1
                 offset = 1
@@ -112,9 +117,7 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
                         objective_function_max = np.asarray(
                             [-x for x in objective_function]
                         )
-
-                        # Update the objective function without changing the model
-                        model_iter.setObjective(objective_function_max @ model_iter.getVars(), GRB.MAXIMIZE)
+                        model_iter.setObjective(objective_function_max, GRB.MAXIMIZE)
                         model_iter.optimize()
 
                         # Again if optimized
@@ -129,8 +132,7 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
                         if not facet_right_removed[0, i]:
                             ub_iter = ub.copy()
                             ub_iter[i] = ub_iter[i] + 1
-                            model_iter = model.copy()
-                            model_iter.setObjective(objective_function_max @ model_iter.getVars(), GRB.MAXIMIZE)
+                            model_iter.setObjective(objective_function_max, GRB.MAXIMIZE)
                             model_iter.optimize()
 
                             status = model_iter.status
@@ -146,8 +148,7 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
                                     removed += 1
                                     facet_right_removed[0, i] = True
 
-                        model_iter = model.copy()
-                        model_iter.setObjective(objective_function @ model_iter.getVars(), GRB.MAXIMIZE)
+                        model_iter.setObjective(objective_function, GRB.MINIMIZE)
                         model_iter.optimize()
 
                         # If optimized
@@ -162,8 +163,7 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
                         if not facet_left_removed[0, i]:
                             lb_iter = lb.copy()
                             lb_iter[i] = lb_iter[i] - 1
-                            model_iter = model.copy()
-                            model_iter.setObjective(objective_function @ model_iter.getVars(), GRB.MAXIMIZE)
+                            model_iter.setObjective(objective_function, GRB.MINIMIZE)
                             model_iter.optimize()
 
                             status = model_iter.status
@@ -188,7 +188,9 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
                                 Aeq_res = np.vstack(
                                     (
                                         Aeq_res,
-                                        A[i, :],
+                                        A[
+                                            i,
+                                        ],
                                     )
                                 )
                                 beq_res = np.append(
@@ -207,7 +209,9 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
                                         A_res,
                                         np.array(
                                             [
-                                                A[n + i, :],
+                                                A[
+                                                    n + i,
+                                                ]
                                             ]
                                         ),
                                         axis=0,
@@ -222,7 +226,9 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
                                         A_res,
                                         np.array(
                                             [
-                                                A[i, :],
+                                                A[
+                                                    i,
+                                                ]
                                             ]
                                         ),
                                         axis=0,
