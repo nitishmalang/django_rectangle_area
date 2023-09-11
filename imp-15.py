@@ -309,31 +309,16 @@ def update_model(model, n, Aeq_sparse, beq, lb, ub, A_sparse, b, objective_funct
     return model
 
 
+
+
 def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
-    """A function to find and remove the redundant facets and to find
-    the facets with very small offset and to set them as equalities
-
-    Keyword arguments:
-    lb -- lower bounds for the fluxes, i.e., a n-dimensional vector
-    ub -- upper bounds for the fluxes, i.e., a n-dimensional vector
-    S -- the mxn stoichiometric matrix, s.t. Sv = 0
-    c -- the objective function to maximize
-    opt_percentage -- consider solutions that give you at least a certain
-                      percentage of the optimal solution (default is to consider
-                      optimal solutions only)
-    """
-
     if lb.size != S.shape[1] or ub.size != S.shape[1]:
-        raise Exception(
-            "The number of reactions must be equal to the number of given flux bounds."
-        )
+        raise Exception("The number of reactions must be equal to the number of given flux bounds.")
 
-    # declare the tolerance that gurobi works properly (we found it experimentally)
     redundant_facet_tol = 1e-07
     tol = 1e-06
 
-    m = S.shape[0]
-    n = S.shape[1]
+    m, n = S.shape
     beq = np.zeros(m)
     Aeq_res = S
 
@@ -345,24 +330,20 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
     b = np.asarray(b, dtype="float")
     b = np.ascontiguousarray(b, dtype="float")
 
-    # call fba to obtain an optimal solution
+    # Call FBA to obtain an optimal solution
     max_biomass_flux_vector, max_biomass_objective = fast_fba(lb, ub, S, c)
     val = -np.floor(max_biomass_objective / tol) * tol * opt_percentage / 100
 
     b_res = []
-    A_res = np.empty((0, n), float)
+    A_res = []
     beq_res = np.array(beq)
 
     try:
-
-        # To avoid printint the output of the optimize() function of Gurobi, we need to set an environment like this
         with gp.Env(empty=True) as env:
             env.setParam("OutputFlag", 0)
             env.start()
 
             with gp.Model(env=env) as model:
-
-                # Create variables
                 x = model.addMVar(
                     shape=n,
                     vtype=GRB.CONTINUOUS,
@@ -388,222 +369,118 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
                 # Update the model to include the constraints added
                 model.update()
 
-                # Add constraints for the uneqalities of A
+                # Add constraints for the inequalities of A
                 model.addMConstr(A_sparse, x, "<", [val], name="d")
 
-                # Update the model with the extra constraints and then print it
+                # Update the model with the extra constraints
                 model.update()
 
                 model_iter = model.copy()
-
-                # initialize
                 indices_iter = range(n)
                 removed = 1
                 offset = 1
-                facet_left_removed = np.zeros((1, n), dtype=bool)
-                facet_right_removed = np.zeros((1, n), dtype=bool)
+                facet_left_removed = np.zeros(n, dtype=bool)
+                facet_right_removed = np.zeros(n, dtype=bool)
 
-                # Loop until nor redundant facets are found
                 while removed > 0 or offset > 0:
-
                     removed = 0
                     offset = 0
-                    indices = indices_iter.copy()
+                    indices = list(indices_iter)
                     indices_iter = []
 
                     Aeq_sparse = sp.csr_matrix(Aeq_res)
                     beq = np.array(beq_res)
 
                     b_res = []
-                    A_res = np.empty((0, n), float)
-                    for i in indices:
+                    A_res = []
 
-                        # Set the ith row of the A matrix as the objective function
+                    for i in indices:
                         objective_function = A[i, :]
 
                         redundant_facet_right = True
                         redundant_facet_left = True
 
-                        # for the maximum
-                        objective_function_max = np.asarray(
-                            [-x for x in objective_function]
-                        )
-                        model_iter = update_model(
-                            model_iter,
-                            n,
-                            Aeq_sparse,
-                            beq,
-                            lb,
-                            ub,
-                            A_sparse,
-                            [val],
-                            objective_function_max,
-                        )
+                        # For the maximum
+                        objective_function_max = [-x for x in objective_function]
+                        model_iter.setObjective(objective_function_max, GRB.MAXIMIZE)
                         model_iter.optimize()
 
-                        # Again if optimized
                         status = model_iter.status
                         if status == GRB.OPTIMAL:
-                            # Get the max objective value
                             max_objective = -model_iter.getObjective().getValue()
                         else:
                             max_objective = ub[i]
 
-                        # if this facet was not removed in a previous iteration
-                        if not facet_right_removed[0, i]:
-                            ub_iter = ub.copy()
+                        if not facet_right_removed[i]:
+                            ub_iter = np.copy(ub)
                             ub_iter[i] = ub_iter[i] + 1
-                            model_iter = update_model(
-                                model_iter,
-                                n,
-                                Aeq_sparse,
-                                beq,
-                                lb,
-                                ub_iter,
-                                A_sparse,
-                                [val],
-                                objective_function_max,
-                            )
+                            model_iter.setObjective(objective_function_max, GRB.MAXIMIZE)
                             model_iter.optimize()
 
                             status = model_iter.status
                             if status == GRB.OPTIMAL:
-                                # Get the max objective value with relaxed inequality
                                 max_objective2 = -model_iter.getObjective().getValue()
-                                if (
-                                    np.abs(max_objective2 - max_objective)
-                                    > redundant_facet_tol
-                                ):
+                                if np.abs(max_objective2 - max_objective) > redundant_facet_tol:
                                     redundant_facet_right = False
                                 else:
                                     removed += 1
-                                    facet_right_removed[0, i] = True
+                                    facet_right_removed[i] = True
 
-                        model_iter = update_model(
-                            model_iter,
-                            n,
-                            Aeq_sparse,
-                            beq,
-                            lb,
-                            ub,
-                            A_sparse,
-                            [val],
-                            objective_function,
-                        )
+                        model_iter.setObjective(objective_function, GRB.MINIMIZE)
                         model_iter.optimize()
 
-                        # If optimized
                         status = model_iter.status
                         if status == GRB.OPTIMAL:
-                            # Get the min objective value
                             min_objective = model_iter.getObjective().getValue()
                         else:
                             min_objective = lb[i]
 
-                        # if this facet was not removed in a previous iteration
-                        if not facet_left_removed[0, i]:
-                            lb_iter = lb.copy()
+                        if not facet_left_removed[i]:
+                            lb_iter = np.copy(lb)
                             lb_iter[i] = lb_iter[i] - 1
-                            model_iter = update_model(
-                                model_iter,
-                                n,
-                                Aeq_sparse,
-                                beq,
-                                lb_iter,
-                                ub,
-                                A_sparse,
-                                [val],
-                                objective_function,
-                            )
+                            model_iter.setObjective(objective_function, GRB.MINIMIZE)
                             model_iter.optimize()
 
                             status = model_iter.status
                             if status == GRB.OPTIMAL:
-                                # Get the min objective value with relaxed inequality
                                 min_objective2 = model_iter.getObjective().getValue()
-                                if (
-                                    np.abs(min_objective2 - min_objective)
-                                    > redundant_facet_tol
-                                ):
+                                if np.abs(min_objective2 - min_objective) > redundant_facet_tol:
                                     redundant_facet_left = False
                                 else:
                                     removed += 1
-                                    facet_left_removed[0, i] = True
+                                    facet_left_removed[i] = True
 
-                        if (not redundant_facet_left) or (not redundant_facet_right):
+                        if not redundant_facet_left or not redundant_facet_right:
                             width = abs(max_objective - min_objective)
 
-                            # Check whether the offset in this dimension is small (and set an equality)
                             if width < redundant_facet_tol:
                                 offset += 1
-                                Aeq_res = np.vstack(
-                                    (
-                                        Aeq_res,
-                                        A[
-                                            i,
-                                        ],
-                                    )
-                                )
-                                beq_res = np.append(
-                                    beq_res, min(max_objective, min_objective)
-                                )
-                                # Remove the bounds on this dimension
+                                Aeq_res = np.vstack((Aeq_res, A[i, :]))
+                                beq_res = np.append(beq_res, min(max_objective, min_objective))
                                 ub[i] = sys.float_info.max
                                 lb[i] = -sys.float_info.max
                             else:
-                                # store this dimension
                                 indices_iter.append(i)
 
                                 if not redundant_facet_left:
-                                    # Not a redundant inequality
-                                    A_res = np.append(
-                                        A_res,
-                                        np.array(
-                                            [
-                                                A[
-                                                    n + i,
-                                                ]
-                                            ]
-                                        ),
-                                        axis=0,
-                                    )
+                                    A_res.append(A[n + i, :])
                                     b_res.append(b[n + i])
                                 else:
                                     lb[i] = -sys.float_info.max
 
                                 if not redundant_facet_right:
-                                    # Not a redundant inequality
-                                    A_res = np.append(
-                                        A_res,
-                                        np.array(
-                                            [
-                                                A[
-                                                    i,
-                                                ]
-                                            ]
-                                        ),
-                                        axis=0,
-                                    )
+                                    A_res.append(A[i, :])
                                     b_res.append(b[i])
                                 else:
                                     ub[i] = sys.float_info.max
-                        else:
-                            # Remove the bounds on this dimension
-                            ub[i] = sys.float_info.max
-                            lb[i] = -sys.float_info.max
 
-                b_res = np.asarray(b_res)
-                A_res = np.asarray(A_res, dtype="float")
-                A_res = np.ascontiguousarray(A_res, dtype="float")
+                    A_res = np.array(A_res, dtype="float")
+                    Aeq_res = sp.vstack([Aeq_res, sp.csr_matrix(A_res)])
+                    b_res = np.asarray(b_res)
+                    A_res = np.empty((0, n), float)
 
-                return (
-                    A_res,
-                    b_res,
-                    Aeq_res,
-                    beq_res,
-                )
+                return A_res, b_res, Aeq_res, beq_res
 
-    # Print error messages
     except gp.GurobiError as e:
         print("Error code " + str(e.errno) + ": " + str(e))
     except AttributeError:
