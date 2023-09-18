@@ -394,7 +394,7 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
                 # Update the model with the extra constraints and then print it
                 model.update()
 
-                model_iter = model.copy()
+                model_iter = model
 
                 # initialize
                 indices_iter = range(n)
