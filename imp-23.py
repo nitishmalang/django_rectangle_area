@@ -96,8 +96,7 @@ def update_model(lp_model, n, Aeq_sparse, beq, lb, ub, A_sparse, b, objective_fu
     lp_model.update_objective(objective_function)
     return lp_model
 
-# Define a function to find and remove redundant facets
-def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
+def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=1e-3):
     m, n = S.shape
     Aeq_sparse = sp.csr_matrix(S)
     beq = np.zeros(m)
@@ -108,18 +107,16 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
     b = np.asarray(b, dtype="float")
     b = np.ascontiguousarray(b, dtype="float")
 
-    # Call fast_fba to obtain an optimal solution
-    max_biomass_flux_vector, max_biomass_objective = fast_fba(lb, ub, S, c)
-    val = -np.floor(max_biomass_objective / 1e-06) * 1e-06 * opt_percentage / 100
-
-    b_res = []
-    A_res = np.empty((0, n), float)
+    # Initialize Aeq_res and beq_res
+    Aeq_res = np.empty((0, n), float)
     beq_res = np.array(beq)
 
     lp_model = LPModel(n, Aeq_sparse, beq, lb, ub, sp.csr_matrix(A), b)
     lp_model.update_objective(np.array([-x for x in c]))
 
-    # Initialize
+    # Initialize other variables
+    lbx = lb.copy()
+    ubx = ub.copy()
     indices_iter = list(range(n))
     removed = 1
     offset = 1
@@ -132,9 +129,6 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
         offset = 0
         indices = indices_iter
         indices_iter = []
-
-        Aeq_sparse = sp.csr_matrix(np.append(Aeq_res, A_res, axis=0))
-        beq = np.append(beq_res, b_res)
 
         for i in indices:
             objective_function = A[i, :]
@@ -220,12 +214,6 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
                         b_res.append(b[i])
                     else:
                         ub[i] = sys.float_info.max
-            else:
-                offset += 1
-                Aeq_res = np.vstack((Aeq_res, A[i, :]))
-                beq_res = np.append(beq_res, min(max_objective, min_objective))
-                ub[i] = sys.float_info.max
-                lb[i] = -sys.float_info.max
 
     indices = np.setdiff1d(list(range(n)), indices_iter)
     lb_iter = lb.copy()
@@ -267,6 +255,7 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
     lp_model.update_objective(c)
 
     return lp_model
+
 
 # Define a function to compute the fast inner ball
 def fast_inner_ball(lb, ub, S, c):
