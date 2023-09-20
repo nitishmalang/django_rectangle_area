@@ -96,6 +96,12 @@ def update_model(lp_model, n, Aeq_sparse, beq, lb, ub, A_sparse, b, objective_fu
     lp_model.update_objective(objective_function)
     return lp_model
 
+import numpy as np
+import scipy.sparse as sp
+from gurobipy import GRB
+
+# ... (previous code)
+
 def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=1e-3):
     m, n = S.shape
     Aeq_sparse = sp.csr_matrix(S)
@@ -199,19 +205,19 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=1e-3):
                     offset += 1
                     Aeq_res = np.vstack((Aeq_res, A[i, :]))
                     beq_res = np.append(beq_res, min(max_objective, min_objective))
-                    ub[i] = sys.float_info.max
-                    lb[i] = -sys.float_info.max
+                    ub[i] = -sys.float_info.max
+                    lb[i] = sys.float_info.max
                 else:
                     indices_iter.append(i)
                     if not redundant_facet_left:
-                        A_res = np.append(A_res, np.array([A[n + i, :]]), axis=0)
-                        b_res.append(b[n + i])
+                        Aeq_res = np.vstack((Aeq_res, A[n + i, :]))
+                        beq_res = np.append(beq_res, b[n + i])
                     else:
                         lb[i] = -sys.float_info.max
 
                     if not redundant_facet_right:
-                        A_res = np.append(A_res, np.array([A[i, :]]), axis=0)
-                        b_res.append(b[i])
+                        Aeq_res = np.vstack((Aeq_res, A[i, :]))
+                        beq_res = np.append(beq_res, b[i])
                     else:
                         ub[i] = sys.float_info.max
 
@@ -247,14 +253,12 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=1e-3):
             lb[i] = -sys.float_info.max
             ub[i] = sys.float_info.max
 
-    A_sparse = A_res
-    b = np.asarray(b_res)
-    b = np.ascontiguousarray(b)
-
-    lp_model = LPModel(n, Aeq_res, beq_res, lb, ub, sp.csr_matrix(A_sparse), b)
-    lp_model.update_objective(c)
-
-    return lp_model
+    return (
+                    A_res,
+                    b_res,
+                    Aeq_res,
+                    beq_res,
+                )
 
 
 # Define a function to compute the fast inner ball
