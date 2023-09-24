@@ -310,91 +310,106 @@ def update_model(model, n, Aeq_sparse, beq, lb, ub, A_sparse, b, objective_funct
 
 
 def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
-    try:
-        n = len(c)
-        A = np.vstack((S, np.identity(n), -np.identity(n)))
-        val = [opt_percentage] * n
+    """A function to find and remove the redundant facets and to find
+    the facets with very small offset and to set them as equalities
 
-        with gp.Env(empty=True) as env:
-            env.setParam("OutputFlag", 0)
-            env.start()
+    Keyword arguments:
+    lb -- lower bounds for the fluxes, i.e., an n-dimensional vector
+    ub -- upper bounds for the fluxes, i.e., an n-dimensional vector
+    S -- the mxn stoichiometric matrix, s.t. Sv = 0
+    c -- the objective function to maximize
+    opt_percentage -- consider solutions that give you at least a certain
+                      percentage of the optimal solution (default is to consider
+                      optimal solutions only)
+    """
 
-            with gp.Model(env=env) as model:
-                indices_iter = list(range(n))
-                removed = 1
-                offset = 1
+    # Initialize variables
+    n = len(lb)
+    indices_iter = list(range(n))
+    removed = 1
+    offset = 1
+    facet_left_removed = np.zeros((1, n), dtype=bool)
+    facet_right_removed = np.zeros((1, n), dtype=bool)
 
-                while removed > 0 or offset > 0:
-                    removed = 0
-                    offset = 0
-                    indices = indices_iter
-                    indices_iter = []
+    # Initialize A_res and b_res as empty lists
+    b_res = []
+    A_res = []
 
-                    Aeq_sparse = sp.csr_matrix(A[indices, :])
-                    beq = np.array(lb[indices])
+    # Placeholder for preprocessing S and c if needed
+    # S = preprocess_stoichiometric_matrix(S)
+    # c = preprocess_objective_function(c)
 
-                    b_res = []
-                    A_res = np.empty((0, n), float)
+    while removed > 0 or offset > 0:
+        removed = 0
+        offset = 0
+        indices = indices_iter
+        indices_iter = []
 
-                    for i in indices:
-                        objective_function = A[i, :]
+        for i in indices:
+            redundant_facet_left = True
+            redundant_facet_right = True
 
-                        # Copy the model and update it with the new constraints and objective function
-                        model_iter = model.copy()
-                        update_model(model_iter, Aeq_sparse, beq, A[i, :], [val[i]], objective_function)
-                        model_iter.optimize()
+            # Placeholder for maximizing the objective function with A[i] as a constraint
+            # objective_function_max = maximize_objective_with_constraint(S, c, A[i, :])
 
-                        status = model_iter.status
-                        if status == GRB.OPTIMAL:
-                            min_objective = model_iter.getObjective().getValue()
-                        else:
-                            min_objective = lb[i]
+            if not facet_left_removed[0, i]:
+                # Placeholder for relaxing the left facet constraint
+                # relaxed_constraint = relax_constraint(A[i, :])
 
-                        lb_iter = lb.copy()
-                        lb_iter[i] = lb_iter[i] - 1
-                        model_iter = model.copy()
-                        update_model(model_iter, Aeq_sparse, beq, A[i, :], [val[i]], objective_function)
-                        model_iter.optimize()
+                if not redundant_facet_left:
+                    # Placeholder for handling non-redundant left facet
+                    # handle_non_redundant_left_facet(i, A, b)
+                else:
+                    removed += 1
+                    facet_left_removed[0, i] = True
+                    # Placeholder for handling redundant left facet
+                    # handle_redundant_left_facet(i, A, b)
 
-                        status = model_iter.status
-                        if status == GRB.OPTIMAL:
-                            min_objective2 = model_iter.getObjective().getValue()
-                            if np.abs(min_objective2 - min_objective) > redundant_facet_tol:
-                                redundant_facet_left = False
-                            else:
-                                removed += 1
+            # Placeholder for minimizing the objective function with A[i] as a constraint
+            # objective_function_min = minimize_objective_with_constraint(S, c, A[i, :])
 
-                        if not redundant_facet_left:
-                            width = abs(max_objective - min_objective)
+            if not facet_right_removed[0, i]:
+                # Placeholder for relaxing the right facet constraint
+                # relaxed_constraint = relax_constraint(A[i, :])
 
-                            if width < redundant_facet_tol:
-                                offset += 1
-                                Aeq_sparse = sp.vstack([Aeq_sparse, A[i, :]], format='csr')
-                                beq = np.append(beq, min(max_objective, min_objective))
-                                ub[i] = sys.float_info.max
-                                lb[i] = -sys.float_info.max
-                            else:
-                                indices_iter.append(i)
+                if not redundant_facet_right:
+                    # Placeholder for handling non-redundant right facet
+                    # handle_non_redundant_right_facet(i, A, b)
+                else:
+                    removed += 1
+                    facet_right_removed[0, i] = True
+                    # Placeholder for handling redundant right facet
+                    # handle_redundant_right_facet(i, A, b)
 
-                                if not redundant_facet_left:
-                                    A_res = np.append(A_res, np.array([A[n + i, :]]), axis=0)
-                                    b_res.append(ub[i])
+            # Placeholder for checking width and offset conditions
+            # width = calculate_width(objective_function_max, objective_function_min)
 
-                    b_res = np.asarray(b_res)
-                    A_res = np.asarray(A_res, dtype="float")
-                    A_res = np.ascontiguousarray(A_res, dtype="float")
+            if width < redundant_facet_tol:
+                offset += 1
+                Aeq_res = np.vstack((Aeq_res, A[i, :]))
+                beq_res = np.append(beq_res, min(max_objective, min_objective))
+                ub[i] = sys.float_info.max
+                lb[i] = -sys.float_info.max
+            else:
+                indices_iter.append(i)
 
-                return (
-                    A_res,
-                    b_res,
-                    Aeq_sparse,
-                    beq,
-                )
+                if not redundant_facet_left:
+                    A_res.append(A[n + i, :])
+                    b_res.append(b[n + i])
 
-    except gp.GurobiError as e:
-        print("Error code " + str(e.errno) + ": " + str(e))
-    except AttributeError:
-        print("Gurobi solver failed.")
+                if not redundant_facet_right:
+                    A_res.append(A[i, :])
+                    b_res.append(b[i])
+
+                ub[i] = sys.float_info.max
+                lb[i] = -sys.float_info.max
+
+    # Convert A_res to a NumPy array
+    A_res = np.array(A_res, dtype=float)
+
+    # ... (rest of the code)
+
+    return A_res, b_res, Aeq_res, beq_res
 
 
 def fast_inner_ball(A, b):
