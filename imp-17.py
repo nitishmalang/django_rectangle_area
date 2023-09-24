@@ -3,7 +3,7 @@
 
 # Copyright (c) 2021 Apostolos Chalkis
 
-# Licensed under GNU LGPL.3, see LICENCE file
+# Licensed under GNU LGPL.3, see Licence file
 
 import sys
 import numpy as np
