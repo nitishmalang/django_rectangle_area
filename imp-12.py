@@ -2,7 +2,7 @@
 
 
 def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
-    """Find and remove the redundant facets and identify facets with small offsets.
+    ""Find and remove the redundant facets and identify facets with small offsets.
 
     Keyword arguments:
     lb -- lower bounds for the fluxes, i.e., an n-dimensional vector
@@ -12,7 +12,7 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
     opt_percentage -- consider solutions that give you at least a certain
                       percentage of the optimal solution (default is to consider
                       optimal solutions only)
-    """
+    ""
 
     if lb.size != S.shape[1] or ub.size != S.shape[1]:
         raise Exception(
