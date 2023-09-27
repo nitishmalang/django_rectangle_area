@@ -3,9 +3,8 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
     the facets with very small offset and to set them as equalities
 
     Keyword arguments:
-    lb -- lower bounds for the fluxes, i.e., a n-dimensional vector
-    ub -- upper bounds for the fluxes, i.e., a n-dimensional vector
-    S -- the mxn stoichiometric matrix, s.t. Sv = 0
+    l
+    S -- the mxn stoichiometric matrix, s.t. Sv = 
     c -- the objective function to maximize
     opt_percentage -- consider solutions that give you at least a certain
                       percentage of the optimal solution (default is to consider
