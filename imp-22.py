@@ -8,8 +8,8 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
     S -- the mxn stoichiometric matrix, s.t. Sv = 0
     c -- the objective function to maximize
     opt_percentage -- consider solutions that give you at least a certain
-                      percentage of the optimal solution (default is to consider
-                      optimal solutions only)
+                      percentage of the optimal solution default is to consider
+                      optimal solutions only
     """
 
     if lb.size != S.shape[1] or ub.size != S.shape[1]:
