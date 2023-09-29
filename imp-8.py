@@ -11,7 +11,7 @@ def fast_fba(lb, ub, S, c):
     """A Python function to perform fba using gurobi LP solver
     Returns an optimal solution and its value for the following linear program:
     max c*v, subject to,
-    Sv = 0, lb <= v <= ub
+    
 
     Keyword arguments:
     lb -- lower bounds for the fluxes, i.e., a n-dimensional vector
