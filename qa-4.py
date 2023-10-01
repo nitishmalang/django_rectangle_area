@@ -529,12 +529,16 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
                 A_res = A_res[:m]
                 b_res = b_res[:m]
 
+                # Truncate Aeq_res and beq_res to match their shapes with the previous version
+                Aeq_res = Aeq_res[:m]
+
                 return A_res, b_res, Aeq_res, beq_res
 
     except gp.GurobiError as e:
         print("Error code " + str(e.errno) + ": " + str(e))
     except AttributeError:
         print("Gurobi solver failed.")
+
 
               
 
