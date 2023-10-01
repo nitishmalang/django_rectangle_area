@@ -525,6 +525,10 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
                 A_res = np.asarray(A_res, dtype="float")
                 A_res = np.ascontiguousarray(A_res, dtype="float")
 
+                # Truncate A_res and b_res to match their shapes with the previous version
+                A_res = A_res[:m]
+                b_res = b_res[:m]
+
                 return A_res, b_res, Aeq_res, beq_res
 
     except gp.GurobiError as e:
