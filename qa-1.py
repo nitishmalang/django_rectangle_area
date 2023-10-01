@@ -333,8 +333,8 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
     max_biomass_flux_vector, max_biomass_objective = fast_fba(lb, ub, S, c)
     val = -np.floor(max_biomass_objective / tol) * tol * opt_percentage / 100
 
-    b_res = np.zeros(m)
-    A_res = np.zeros((m, n), dtype="float")
+    b_res = []
+    A_res = np.empty((0, n), float)
     beq_res = np.array(beq)
 
     try:
@@ -380,8 +380,8 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
                     Aeq_sparse = sp.csr_matrix(Aeq_res)
                     beq = np.array(beq_res)
 
-                    b_res = np.zeros(m)
-                    A_res = np.zeros((m, n), dtype="float")
+                    b_res = []
+                    A_res = np.empty((0, n), float)
                     for i in indices:
                         objective_function = A[i]
 
@@ -497,7 +497,7 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
                                         ),
                                         axis=0,
                                     )
-                                    b_res[i] = b[n + i]
+                                    b_res.append(b[n + i])
                                 else:
                                     lb[i] = -sys.float_info.max
 
@@ -513,7 +513,7 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
                                         ),
                                         axis=0,
                                     )
-                                    b_res[i] = b[i]
+                                    b_res.append(b[i])
                                 else:
                                     ub[i] = sys.float_info.max
                         else:
@@ -530,6 +530,7 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
         print("Error code " + str(e.errno) + ": " + str(e))
     except AttributeError:
         print("Gurobi solver failed.")
+
 
 
                       
