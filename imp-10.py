@@ -8,7 +8,7 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
             "The number of reactions must be equal to the number of given flux bounds."
         )
 
-    # Declare the tolerance that Gurobi works properly (we found it experimentally)
+   
     redundant_facet_tol = 1e-07
     tol = 1e-06
 
