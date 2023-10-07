@@ -4,9 +4,7 @@
 def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
     ""Find and remove the redundant facets and identify facets with small offsets.
 
-    Keyword arguments:
-    lb -- lower bounds for the fluxes, i.e., an n-dimensional vector
-    ub -- upper bounds for the fluxes, i.e., an n-dimensional vector
+   
     S -- the mxn stoichiometric matrix, s.t. Sv = 0
     c -- the objective function to maximize
     opt_percentage -- consider solutions that give you at least a certain
