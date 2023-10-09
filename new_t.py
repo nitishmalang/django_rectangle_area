@@ -311,8 +311,7 @@ def update_model(model, n, Aeq_sparse, beq, lb, ub, A_sparse, b, objective_funct
 
 
 
-def update_model_constraints_and_bounds(model, Aeq_sparse=None, beq=None, A_sparse=None, b=None,
-                                       new_lower_bounds=None, new_upper_bounds=None):
+update_model_constraints_and_bounds(model_iter, Aeq_sparse, Aeq_sparse, beq, A_sparse, [val], lb, ub):
     if Aeq_sparse is not None and beq is not None:
         # Remove the old equality constraints
         model.remove("c")
