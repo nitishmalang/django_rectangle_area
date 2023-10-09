@@ -309,6 +309,8 @@ def update_model(model, n, Aeq_sparse, beq, lb, ub, A_sparse, b, objective_funct
     return model
 
 
+
+
 def update_model_constraints_and_bounds(model, Aeq_sparse=None, beq=None, A_sparse=None, b=None,
                                        new_lower_bounds=None, new_upper_bounds=None):
     if Aeq_sparse is not None and beq is not None:
@@ -341,12 +343,6 @@ def update_model_constraints_and_bounds(model, Aeq_sparse=None, beq=None, A_spar
     # Update the model to apply the changes
     model.update()
 
-# Usage example:
-# Assuming you have a Gurobi model 'model' and new constraint matrices/vectors and bounds
-# Call the function to update the model
-# update_model_constraints_and_bounds(model, Aeq_sparse_new, beq_new, A_sparse_new, b_new, new_lower_bounds, new_upper_bounds)
-
-
 def solve_lp_with_different_objectives(model, new_objective_coeffs):
     """
     Solve a linear program with a different objective function.
@@ -358,7 +354,7 @@ def solve_lp_with_different_objectives(model, new_objective_coeffs):
     Returns:
         gurobipy.Model: The updated Gurobi model with the new objective function.
     """
-    # Clear the existing objective function(precautionary step)
+    # Clear the existing objective function
     model.setObjective(0, clear=True)
 
     # Update the objective function with the new coefficients
@@ -447,7 +443,6 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
                    
                     update_model_constraints_and_bounds(model_iter, Aeq_sparse, beq, A_sparse, [val], lb, ub)
 
-
                     for i in indices:
                         objective_function = A[i]
 
@@ -461,7 +456,6 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
                         model_iter = solve_lp_with_different_objectives(
                             model_iter.copy(), objective_function_max
                         )
-
 
                         status = model_iter.status
                         if status == GRB.OPTIMAL:
@@ -513,7 +507,6 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
                             model_iter = solve_lp_with_different_objectives(
                                 model_iter.copy(), objective_function
                             )
-
 
                             status = model_iter.status
                             if status == GRB.OPTIMAL:
@@ -593,6 +586,10 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
         print("Error code " + str(e.errno) + ": " + str(e))
     except AttributeError:
         print("Gurobi solver failed.")
+
+
+
+
 
 def fast_inner_ball(A, b):
     """A Python function to compute the maximum inscribed ball in the given polytope using gurobi LP solver
