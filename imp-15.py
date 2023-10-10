@@ -22,8 +22,7 @@ def fast_fba(lb, ub, S, c):
     Keyword arguments:
     lb -- lower bounds for the fluxes, i.e., a n-dimensional vector
     ub -- upper bounds for the fluxes, i.e., a n-dimensional vector
-    S -- the mxn stoichiometric matrix, s.t. Sv = 0
-    c -- the linear objective function, i.e., a n-dimensional vector
+    S -- the mxn mensional vector
     """
 
     if lb.size != S.shape[1] or ub.size != S.shape[1]:
