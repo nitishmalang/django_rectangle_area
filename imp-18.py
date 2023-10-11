@@ -11,14 +11,14 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
     beq = np.zeros(m)
 
     # Make sparse Aeq
-    Aeq_sparse = sp.csr_matrix(S)
+    Aeq_sparse = sp.csc_matrix(S)
 
     A = sp.lil_matrix((2 * n, n), dtype="float")
     A[:n, :] = sp.eye(n)
     A[n:, :] -= sp.eye(n)
 
-    b_upper = sp.csr_matrix((ub, (range(n), [0] * n)), shape=(n, 1), dtype="float")
-    b_lower = sp.csr_matrix((lb, (range(n), [0] * n)), shape=(n, 1), dtype="float")
+    b_upper = sp.csc_matrix((ub, (range(n), [0] * n)), shape=(n, 1), dtype="float")
+    b_lower = sp.csc_matrix((lb, (range(n), [0] * n)), shape=(n, 1), dtype="float")
 
     b = sp.vstack([b_upper, -b_lower], format="csr")
 
