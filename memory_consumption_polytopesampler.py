@@ -15,8 +15,8 @@ def measure_memory_usage(model_path):
     A, b, N, N_shift = sampler.get_polytope()
 
 if _name_ == "_main_":
-    # Path to your model JSON file
+  
     model_path = '/home/nitishmalang/Downloads/iIT341.json'
 
-    # Measure memory consumption
+  
     measure_memory_usage(model_path)
