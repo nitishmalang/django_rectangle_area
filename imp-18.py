@@ -10,7 +10,7 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
     m, n = S.shape
     beq = np.zeros(m)
 
-    # Make sparse Aeq
+   
     Aeq_sparse = sp.csc_matrix(S)
 
     A = sp.lil_matrix((2 * n, n), dtype="float")
