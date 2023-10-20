@@ -25,7 +25,7 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
     b = np.asarray(b, dtype="float")
     b = np.ascontiguousarray(b, dtype="float")
 
-    # call fba to obtain an optimal solution
+    
     max_biomass_flux_vector, max_biomass_objective = fast_fba(lb, ub, S, c)
     val = -np.floor(max_biomass_objective / tol) * tol * opt_percentage / 100
 
