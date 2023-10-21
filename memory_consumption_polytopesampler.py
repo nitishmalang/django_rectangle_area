@@ -11,7 +11,7 @@ def measure_memory_usage(model_path):
     # Create the sampler
     sampler = PolytopeSampler(model)
 
-    # Call the get_polytope function
+    
     A, b, N, N_shift = sampler.get_polytope()
 
 if _name_ == "_main_":
