@@ -4,7 +4,7 @@ from PolyRound.static_classes.lp_utils import ChebyshevFinder
 from PolyRound.settings import PolyRoundSettings
 from dingo import MetabolicNetwork, PolytopeSampler
 
-# Set the path to your model XML or JSON file
+
 polyround_model_path = '/home/nitishmalang/Downloads/iAB_RBC_283.xml'
 dingo_model_path = '/home/nitishmalang/Downloads/iAB_RBC_283.json'
 
