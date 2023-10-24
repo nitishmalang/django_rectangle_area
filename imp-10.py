@@ -34,7 +34,7 @@ def fast_remove_redundant_facets(lb, ub, S, c, opt_percentage=100):
     beq_res = np.array(beq)
 
     try:
-        # To avoid printing the output of the optimize() function of Gurobi, we need to set an environment like this
+       
         with gp.Env(empty=True) as env:
             env.setParam("OutputFlag", 0)
             env.start()
