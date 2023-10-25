@@ -52,7 +52,7 @@ def fast_fba(lb, ub, S, c):
 
     try:
 
-        # To avoid printint the output of the optimize() function of Gurobi, we need to set an environment like this
+        
         with gp.Env(empty=True) as env:
             env.setParam("OutputFlag", 0)
             env.start()
