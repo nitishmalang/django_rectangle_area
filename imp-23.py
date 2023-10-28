@@ -4,7 +4,6 @@ import numpy as np
 import scipy.sparse as sp
 import math
 
-# Define a class to handle LP model initialization and reuse
 class LPModel:
     def __init__(self, n, Aeq_sparse, beq, lb, ub, A_sparse, b):
         self.model = gp.Model()
